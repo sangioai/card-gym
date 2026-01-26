@@ -65,7 +65,7 @@ class BriscolaEnv(ParametricEnv):
         briscola_suit = _obs.pop("briscola_suit")
         briscola_rank = _obs.pop("briscola_rank")
         _obs["briscola"] = SUIT_CODE[Suit(briscola_suit)]
-        _obs["scores"] = f"{_obs["scores"][0]}-{_obs["scores"][1]}"
+        _obs["scores"] = f"""{_obs["scores"][0]}-{_obs["scores"][1]}"""
         _obs["hands"] = [sorted([card_to_code(Card(int(r),Suit(s))) for s,r in zip(hand_suit, hand_ranks) if s != -1])]
         _obs["trick"] = sorted([card_to_code(Card(int(r),Suit(s))) for s,r in zip(trick_suit, trick_ranks) if s != -1])
         return DEFAULT_GAME_STRINGIFY(**_obs)
@@ -152,8 +152,8 @@ class BriscolaEnv(ParametricEnv):
         truncated = False
         point_diffs = new_obs["scores"] - obs["scores"]
         point_diffs = point_diffs if min(point_diffs) == 0 else new_obs["scores"][-1::-1] - obs["scores"]
-        # if armgax(diff)==1 it wasn't me who made the points :(
-        points = max(point_diffs) if np.argmax(point_diffs) == 1 else 0
+        # reward is my_gain - opp_gain
+        points = point_diffs[0] - point_diffs[1] 
         # calculate reward
         reward += points
         return float(reward), truncated, terminated

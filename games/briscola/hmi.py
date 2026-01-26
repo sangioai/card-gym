@@ -5,6 +5,7 @@ import numpy as np
 from typing import Tuple, Optional
 from .logic import *
 
+
 pygame.init()
 
 ##################################
@@ -63,6 +64,7 @@ def draw_card(
     font: pygame.font.Font,
     highlight: bool = False,
 ):
+    if card is None: return
     x, y = pos
 
     bg_color = GOLD if highlight else WHITE
@@ -145,6 +147,7 @@ def draw_briscola(
     card: Card,
     font: pygame.font.Font,
 ):
+    if card is None: return
     x = SCREEN_WIDTH - CARD_WIDTH - 40
     y = SCREEN_HEIGHT // 2 - CARD_HEIGHT // 2
 
@@ -226,7 +229,9 @@ def render_game(
     Returns:
         np.ndarray (H, W, 3) if return_rgb=True, else None
     """
-
+    if game.is_terminal():
+        pygame.quit()
+        return
     if render:
         screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption("Briscola")
@@ -240,54 +245,52 @@ def render_game(
     running = True
     rgb_image = None
 
-    while running:
-        if render:
-            clock.tick(30)
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-        else:
-            # Render only one frame in headless mode
-            running = False
-
-        screen.fill(GREEN)
-
-        # Hands
-        draw_hand(
-            screen,
-            game.players[0].hand,
-            y=SCREEN_HEIGHT - CARD_HEIGHT - 40,
-            font=font,
-            hide=False,
-        )
-        draw_hand(
-            screen,
-            game.players[1].hand,
-            y=40,
-            font=font,
-            hide=True,
-        )
-
-        # Deck
-        draw_deck(screen, len(game.deck.cards), font=font)
-
-        # Center trick
-        draw_trick(screen, trick, font)
-
-        # Briscola card
-        draw_briscola(screen, game.briscola_card, font)
-
-        # Scores
-        draw_scores(screen, [p.score for p in game.players], font)
-
-        if render:
-            pygame.display.flip()
-        elif return_rgb:
-            # Convert surface to RGB array (W, H, 3) → (H, W, 3)
-            rgb_image = pygame.surfarray.array3d(screen)
-            rgb_image = np.transpose(rgb_image, (1, 0, 2))
     if render:
-        pygame.quit()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+    else:
+        # Render only one frame in headless mode
+        running = False
+
+    screen.fill(GREEN)
+
+    # Hands
+    draw_hand(
+        screen,
+        game.players[0].hand,
+        y=SCREEN_HEIGHT - CARD_HEIGHT - 40,
+        font=font,
+        hide=False,
+    )
+    draw_hand(
+        screen,
+        game.players[1].hand,
+        y=40,
+        font=font,
+        hide=True,
+    )
+
+    # Deck
+    draw_deck(screen, len(game.deck.cards), font=font)
+
+    # Center trick
+    draw_trick(screen, trick, font)
+
+    # Briscola card
+    draw_briscola(screen, game.briscola_card, font)
+
+    # Scores
+    draw_scores(screen, [p.score for p in game.players], font)
+
+    if render:
+        pygame.display.flip()
+    elif return_rgb:
+        # Convert surface to RGB array (W, H, 3) → (H, W, 3)
+        rgb_image = pygame.surfarray.array3d(screen)
+        rgb_image = np.transpose(rgb_image, (1, 0, 2))
+    # if render:
+    #     pygame.quit()
     return rgb_image
 
 
