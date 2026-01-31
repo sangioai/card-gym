@@ -3,3 +3,5 @@ numpy
 torch
 lovely_tensors
 pygame
+faiss-cpu
+sentence_transformers
