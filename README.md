@@ -16,7 +16,7 @@ Clone the repo, install the requirement.txt and run the following for briscola:
   
 For the Set Game
   ```python
-  python main.py --game briscola
+  python main.py --game set
   ```
 
 ## 🗺️ Roadmap
