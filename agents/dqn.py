@@ -29,6 +29,7 @@ class DQN(nn.Module):
         action_dim: int,
         hidden_dim: int = 64,
         n_layers: int = 2,
+        **args
     ):
         """
         n_layers = number of residual blocks
@@ -53,6 +54,34 @@ class DQN(nn.Module):
             x = block(x)
 
         return self.output_layer(x)
+    
+class DuelingDQN(nn.Module):
+    def __init__(self, state_dim, action_dim, hidden_dim=256, **args):
+        super().__init__()
+
+        self.feature = nn.Sequential(
+            nn.Linear(state_dim, hidden_dim),
+            nn.LayerNorm(hidden_dim),
+            nn.ReLU(),
+        )
+
+        self.value = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, 1),
+        )
+
+        self.advantage = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, action_dim),
+        )
+
+    def forward(self, x):
+        f = self.feature(x)
+        v = self.value(f)
+        a = self.advantage(f)
+        return v + a - a.mean(dim=1, keepdim=True)
 
 ##################################
 # Utility Functions
@@ -60,7 +89,7 @@ class DQN(nn.Module):
 
 # --- DQN loading ------------------------------------------------
 
-def create_dqn_from_env(env, observation_space=None, action_space=None, **args):
+def create_dqn_from_env(env, observation_space=None, action_space=None, dqn_class=DQN, **args):
     # retrive spaces
     observation_space = env.observation_space if not observation_space else observation_space
     action_space = env.action_space if not action_space else action_space
@@ -68,5 +97,5 @@ def create_dqn_from_env(env, observation_space=None, action_space=None, **args):
     state_dim = observation_space.shape[0] if not isinstance(env, gym.vector.VectorEnv) else observation_space.shape[-1]
     action_dim = action_space.n if not isinstance(env, gym.vector.VectorEnv) else action_space.nvec[-1]
     # create q-model
-    q_net = DQN(state_dim, action_dim, **args)
+    q_net = dqn_class(state_dim, action_dim, **args)
     return q_net

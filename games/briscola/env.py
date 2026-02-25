@@ -46,7 +46,7 @@ class BriscolaEnv(ParametricEnv):
             observation_space=obs_space,
             action_space=action_space,
             action_mapper=lambda a: int(a),
-            observation_mapper = lambda o:(o,dict(processed=BriscolaEnv.observation_to_string(o))),
+            observation_mapper = lambda o:(o,dict(raw=o,processed=BriscolaEnv.observation_to_string(o))),
             transition_fn=self.transition_fn,
             rewarder_fn=self.rewarder_fn
         )
@@ -78,7 +78,8 @@ class BriscolaEnv(ParametricEnv):
         """
 
         game = self.game
-        current_player = game.current_player
+        # get current player - if bot, display always player 0 first
+        current_player = game.current_player if not self.bot else 0
         p0 = game.players[current_player]
 
         # --- Scores ---
@@ -135,11 +136,15 @@ class BriscolaEnv(ParametricEnv):
         We'll pick a random action for opponent
         """
         # performa action
-        self.game.sequential_step(action)
-        # random bot response
-        if self.bot and not self.game.is_terminal():
+        res = self.game.sequential_step(action)
+        # random bot response - respond to trick
+        if self.bot and not self.game.is_terminal() and not res["winner"]:
             a1 = random.randrange(len(self.game.players[1 - self.game.current_player].hand))
-            self.game.sequential_step(a1)
+            res = self.game.sequential_step(a1)
+        # random bot response - begin trick
+        if self.bot and not self.game.is_terminal() and res["winner"]==1:
+            a1 = random.randrange(len(self.game.players[self.game.current_player].hand))
+            res = self.game.sequential_step(a1)
         # convert game state
         obs = self.obs_from_game()
         return obs  # we'll encode observation later via observation_mapper

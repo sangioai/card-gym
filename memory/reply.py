@@ -4,7 +4,7 @@ import random
 import numpy as np
 
 
-DEFAULT_BUFFER_CAPACITY = 10000
+DEFAULT_BUFFER_CAPACITY = 1000
 DEFAULT_EMBEDDER_DIM = 384
 
 ##################################

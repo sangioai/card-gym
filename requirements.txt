@@ -5,3 +5,6 @@ lovely_tensors
 pygame
 faiss-cpu
 sentence_transformers
+timm 
+torchvision
+stable-baselines3

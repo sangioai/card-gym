@@ -9,9 +9,14 @@ This repository implements customizable OpenAI-style Gym environment for card ga
 It provides a simple interface to train and evaluate RL agents (e.g., DQN, PPO) on card game tasks.
 
 ## Usage
-Clone the repo and run the following command:
+Clone the repo, install the requirement.txt and run the following for briscola:
   ```python
-  python main.py
+  python main.py --game briscola
+  ```
+  
+For the Set Game
+  ```python
+  python main.py --game briscola
   ```
 
 ## 🗺️ Roadmap

@@ -55,38 +55,30 @@ def build_index(
 def add_embeddings(
     index: faiss.Index,
     embeddings
-) -> Tuple[faiss.Index, np.ndarray]:
+) -> faiss.Index:
     index.add(embeddings)
     return index
 
 # --- Search function ------------------------------------------------
 
 def search(
-    query: str|list,
+    query_embeddings: str|list,
     documents: List[str],
-    encoder: SentenceTransformer,
     index: faiss.Index,
     k: int = 5,
-    **args
+    return_idx = False
 ) -> List[Tuple[str, float]]:
     """
     Returns top-k (document, score) pairs.
     """
 
-    query_embedding = encoder.encode(
-        query if isinstance(query, list) else [query],
-        convert_to_numpy=True,
-        normalize_embeddings=True,
-        **args
-    ).astype("float32")
-
-    scores, indices = index.search(query_embedding, k)
+    scores, indices = index.search(query_embeddings, k)
 
     results = []
     for idx, score in zip(indices[0], scores[0]):
         results.append((documents[idx], float(score)))
 
-    return results
+    return results if not return_idx else (results, indices)
 
 # --- Save/load functions ------------------------------------------------
 
@@ -110,19 +102,22 @@ if __name__ == "__main__":
         "I enjoy Italian food",
         "Dogs are great pets",
     ]
-    # load model
+    # Load model
     model = load_text_embedder()
-    # create index
-    # Node: HNSW graph indexing does not properly work with faiss
-    index, _ = build_index(documents, model, use_hnsw=True)
+    # Embed documents
+    doc_embeddings = embed_state(model, documents)
+    # Build index
+    index = build_index(use_hnsw=True)
+    # Add embeddings to index  <-- THIS WAS MISSING
+    add_embeddings(index, doc_embeddings)
+    # Embed query
+    query_embeddings = embed_state(model, ["I like eating pasta"])
     # perform search
     results = search(
-        query="I like eating pasta",
+        query_embeddings=query_embeddings,
         documents=documents,
-        encoder=model,
         index=index,
-        k=3,
-        prompt_name="query"
+        k=5
     )
     # score results
     for doc, score in results:
